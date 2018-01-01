@@ -26,9 +26,7 @@ public:
         debug("webrtc: %s",message.c_str());
     };
 };
-
 CustomLogger logger;
-
 
 WebRTCStream::WebRTCStream(obs_output_t * output)
 {
@@ -72,7 +70,7 @@ WebRTCStream::WebRTCStream(obs_output_t * output)
     
     
     //Always YUV2
-    videoCaptureCapability.rawType = webrtc::RawVideoType::kVideoYV12;    //Calc size
+    videoCaptureCapability.videoType = webrtc::VideoType::kYV12;    //Calc size
     /*
      webrtc::PeerConnectionFactoryInterface::Options options;
      options.disable_network_monitor = false;
@@ -87,9 +85,9 @@ WebRTCStream::~WebRTCStream()
     factory = NULL;
     videoCapture = NULL;
     //Stop all thread
-    if (!network->IsCurrent())		network->Stop();
-    if (!worker->IsCurrent())		worker->Stop();
-    if (!signaling->IsCurrent())	signaling->Stop();
+    if (!network->IsCurrent())    network->Stop();
+    if (!worker->IsCurrent())    worker->Stop();
+    if (!signaling->IsCurrent())  signaling->Stop();
     //Release
     network.release();
     worker.release();
@@ -338,7 +336,7 @@ void WebRTCStream::onVideoFrame(video_data *frame)
     //Calculate size
     videoCaptureCapability.width = obs_output_get_width(output);
     videoCaptureCapability.height = obs_output_get_height(output);
-    videoCaptureCapability.rawType = webrtc::RawVideoType::kVideoNV12;    
+    videoCaptureCapability.videoType = webrtc::VideoType::kNV12;    
     //Calc size
     uint32_t size = videoCaptureCapability.width*videoCaptureCapability.height * 3 / 2; //obs_output_get_height(output) * frame->linesize[0];
     //Pass it
