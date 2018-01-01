@@ -12,18 +12,24 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 #------------------------------------------------------------------------
 # OpenSSL
 #
-if( WIN32 )
-  if( NOT OPENSSL_ROOT_DIR )
+# NOTE ALEX: this is super ugly!
+#            investigate why it fails on my computer
+#
+if( NOT OPENSSL_ROOT_DIR )
+  if( WIN32 )
     set (OPENSSL_ROOT_DIR "C:/Program Files (x86)/OpenSSL")
+  elseif( APPLE )
+    set (OPENSSL_ROOT_DIR "/opt/local/")
   endif()
-  find_package(OpenSSL REQUIRED)
-  include_directories(${OPENSSL_INCLUDE_DIR})
-elseif( APPLE)
-  set (OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
 endif()
 
+# NOTE ALEX: that should be enough
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
+
+# NOTE ALEX: debugging purpose only
+message( "openssl libraries: ${OPENSSL_LIBRARIES}." )
+message( "openssl incl dirs: ${OPENSSL_INCLUDE_DIR}." )
 
 #------------------------------------------------------------------------
 # Asio
@@ -39,32 +45,31 @@ set( websocketclient_SOURCES WebsocketClientImpl.cpp )
 if( WIN32 )
   set( websocketclient_SOURCES ${websocketclient_SOURCES}
     dllmain.cpp
-  )
+    )
   add_definitions( -DWEBSOCKETCLIENT_EXPORTS )
 endif()
-
 set( websocketclient_HEADERS
   json.hpp
   WebsocketClientImpl.h
   WebsocketClient.h
   )
-
 add_library( websocketclient SHARED
   ${websocketclient_SOURCES}
   ${websocketclient_HEADERS}
   )
+
 if( WIN32 )
-  target_link_libraries( websocketclient
-    ${OPENSSL_LIBRARIES}
-  )
+  target_link_libraries( websocketclient ${OPENSSL_LIBRARIES} )
 elseif( APPLE )
+  # target_link_libraries( websocketclient ${OPENSSL_LIBRARIES} )
   add_library( ssl UNKNOWN IMPORTED)
-  set_property(TARGET ssl PROPERTY IMPORTED_LOCATION "/usr/local/lib/libssl.dylib")
+  set_property(TARGET ssl PROPERTY IMPORTED_LOCATION "/opt/local/lib/libssl.dylib")
   add_library( crypto UNKNOWN IMPORTED)
-  set_property(TARGET crypto PROPERTY IMPORTED_LOCATION "/usr/local/lib/libcrypto.dylib")
+  set_property(TARGET crypto PROPERTY IMPORTED_LOCATION "/opt/local/lib/libcrypto.dylib")
   target_link_libraries( websocketclient
-      ssl
-      crypto
-   )
+    ssl
+    crypto
+    )
 endif()
-install_obs_plugin_with_data(websocketclient data)
+
+install_obs_plugin_with_data( websocketclient data )
